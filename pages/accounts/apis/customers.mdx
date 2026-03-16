@@ -18,6 +18,8 @@ accounts (invoices) and can have tags, custom fields, and communication preferen
 | DELETE | `/customers/{customer_id}`| `customers:write`| Soft-delete a customer.                               |
 | POST   | `/customers/bulk`         | `customers:write`| Bulk create or update customers by `external_id`.     |
 
+Scope behavior and empty-scope full-access rules are documented in **Core Concepts → Authentication**.
+
 <Callout type="info">
   Bulk operations use your own stable identifier (`external_id`) to decide whether to create a new
   customer or update an existing one. Use a consistent external identifier from your CRM or ERP.
@@ -89,6 +91,15 @@ curl --request GET \
   --url 'https://api.agilereceivables.com/api/v1/external/customers?page=1&per_page=20' \
   --header 'X-Api-Key: sk_live_xxxxxxxxxxxxxxxxxxxx'
 ```
+
+Supported query parameters:
+
+| Param      | Type    | Description                                         |
+| ---------- | ------- | --------------------------------------------------- |
+| `search`   | string  | Search by customer fields such as name or contact. |
+| `tags`     | string  | Filter by tag values.                               |
+| `page`     | integer | Page number (default: 1, min: 1).                   |
+| `per_page` | integer | Results per page (default: 20, min: 1, max: 100).   |
 
 Pagination behavior and the `meta` object are documented in **Core Concepts → Pagination**.
 

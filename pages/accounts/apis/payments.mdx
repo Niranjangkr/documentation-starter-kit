@@ -1,5 +1,3 @@
-import { Callout } from 'nextra-theme-docs'
-
 # Payments API
 
 Use the Payments API to record inbound payments and monitor balances for individual accounts.
@@ -22,6 +20,25 @@ Payments are always tied to a specific account and can affect the account’s co
 | `payment_method`   | string  | Method such as `check`, `ach`, or `card`.                    |
 | `payment_reference`| string  | External reference from your system (for example, check ID). |
 | `notes`            | string  | Optional notes stored on the account activity timeline.      |
+
+## Payment statuses
+
+Payment records use the following statuses:
+
+- `PENDING`
+- `PROCESSING`
+- `COMPLETED`
+- `FAILED`
+- `REFUNDED`
+
+## Computed payment tags
+
+Tags are computed at runtime (not stored):
+
+- `partially_paid` when `paid_amount > 0` and `paid_amount < invoice.amount`
+- `past_due`
+- `paid_in_full`
+- `write_off`
 
 ## Record a payment
 
@@ -54,9 +71,15 @@ curl --request POST \
 }
 ```
 
-<Callout type="warning">
-  Backend detail needed:
-  - Clarify how partial payments, refunds, and chargebacks are represented.
-  - Document how status transitions are triggered by payments (for example, when an account becomes `settled`).
-</Callout>
+## Refunds and chargebacks
+
+- Refunds are represented by payment records transitioning to `REFUNDED`.
+- Chargebacks do not have a dedicated status; they are represented as `FAILED` payments.
+
+## Settlement trigger
+
+Settlement is automatic. When `new_paid_amount >= invoice.amount`, the system:
+
+1. Sets invoice status to `SETTLED`.
+2. Sets `paid_at` to current UTC timestamp.
 

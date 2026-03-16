@@ -1,73 +1,168 @@
-import { Callout } from 'nextra-theme-docs'
+import { MermaidDisplay } from '../../components/MermaidDisplay'
 
 # Architecture
 
 This page describes how Agile Receivables models customers, accounts, campaigns, payments, and disputes,
 and how external systems integrate with the API.
 
-## High-level system view
+## High-level system diagram
 
-At a high level:
+<MermaidDisplay
+  chart={`
+flowchart TD
+    ERP["ERP Systems / Manual Upload (CSV, API, Webhooks)"]
+    API["Agile Receivables API"]
+    Customers["Customers (encrypted PII)"]
+    Invoices["Invoices / Accounts (encrypted fields)"]
+    Campaigns["Campaigns (workflow definitions)"]
+    Exec["Campaign Execution Engine (state machine per invoice)"]
+    Email["Email Node -> SES / SendGrid"]
+    SMS["SMS Node -> Twilio"]
+    Voice["Voice Node -> Retell / Twilio"]
+    WaitNode["Wait / Segment / Branch Nodes"]
+    Comms["Communications (sent message records)"]
+    PayLink["Payment Link Generation (Stripe)"]
+    WHStripe["Stripe Connect Webhooks"]
+    WHTwilio["Twilio Webhooks"]
+    WHRetell["Retell Webhooks"]
+    InvoiceStatus["Invoice Status Update (SETTLED on full payment)"]
+    Audit["Audit Logs"]
 
-- Your **ERP / billing system** owns the source-of-truth invoices and customer master data.
-- The **Agile Receivables API** accepts data for customers, accounts, campaigns, and payments.
-- The **campaign engine** triggers communications and workflows based on account status.
-- **Collectors and customers** interact with the system through portals and messaging channels.
+    ERP --> API
+    API --> Customers
+    API --> Invoices
+    API --> Campaigns
+    Campaigns --> Exec
+    Exec --> Email
+    Exec --> SMS
+    Exec --> Voice
+    Exec --> WaitNode
+    Email --> Comms
+    SMS --> Comms
+    Voice --> Comms
+    Comms --> PayLink
+    PayLink --> WHStripe
+    WHStripe --> InvoiceStatus
+    WHTwilio --> InvoiceStatus
+    WHRetell --> InvoiceStatus
+    InvoiceStatus --> Exec
+    Exec --> Audit
+`}
+/>
 
-<Callout type="info">
-  This section is a placeholder for a high-level architecture diagram (for example, data flow between ERP,
-  Agile Receivables, messaging providers, and payment processors). Insert the finalized diagram here.
-</Callout>
+## Entity relationship diagram
 
-## Data model relationships
+<MermaidDisplay
+  chart={`
+erDiagram
+    Company ||--o{ Customer : has
+    Company ||--o{ Invoice : has
+    Company ||--o{ Campaign : has
+    Company ||--o{ ApiKey : has
+    Company ||--o{ User : members
 
-Core entities relevant to the external API:
+    Customer ||--o{ Invoice : has
+    Customer ||--o{ Communication : receives
+    Customer ||--o{ Grievance : raises
 
-- **Customer** – person or business you invoice.
-- **Account (invoice)** – a receivable linked to a customer, with amount, currency, issue date, and due date.
-- **Campaign** – a defined series of steps that drive collections activity for a group of accounts.
-- **Payment** – money applied to an account, reducing the outstanding balance.
-- **Dispute** – a customer-raised issue related to an account, with a message thread and resolution lifecycle.
+    Invoice }o--|| Campaign : assigned_to
+    Invoice ||--o{ Communication : linked_to
+    Invoice ||--o{ Payment : has
+    Invoice ||--o{ Grievance : has
+    Invoice ||--o| CampaignExecution : active_execution
 
-Typical relationships:
+    Campaign ||--o{ CampaignExecution : runs
+    CampaignExecution }o--|| Invoice : for_invoice
+    CampaignExecution }o--|| Customer : for_customer
 
-- A customer can have many accounts.
-- An account can belong to at most one active campaign at a time.
-- An account can have many payments and at most one active dispute.
+    Grievance ||--o{ GrievanceMessage : has
+    Grievance }o--|| User : assigned_to
+    GrievanceMessage }o--o| User : sent_by
+`}
+/>
 
-<Callout type="info">
-  Insert a finalized entity-relationship or UML-style diagram here to make these relationships explicit,
-  including any additional internal entities (for example, tasks, messages, or events).
-</Callout>
+## Customer field validations
 
-## Validation and lifecycle flows
+| Field | Required | Rules |
+| --- | --- | --- |
+| `first_name`, `last_name` | No | Encrypted at rest |
+| `email` | No | Valid email format if provided; encrypted |
+| `phone` | No | Encrypted |
+| `company_name` | No | String |
+| `external_id` | No | String (for ERP linking) |
+| `tags` | No | Array of strings |
+| `timezone` | No | String |
+| `communication_preferences` | No | Object: `{email, sms, voice, do_not_disturb}` booleans |
+| `custom_fields` | No | JSONB dict |
 
-From an integration perspective, most flows follow this pattern:
+## Invoice (Account) field validations
 
-1. Your system creates or updates customers.
-2. Your system creates or updates accounts (invoices) for those customers.
-3. Agile Receivables assigns accounts to campaigns and drives communications.
-4. Customers make payments, which are recorded against accounts.
-5. Status changes and disputes are synchronized back to your systems as needed.
+| Field | Required | Rules |
+| --- | --- | --- |
+| `invoice_number` | Yes | String, indexed |
+| `customer_id` | Yes | UUID |
+| `amount` | Yes | Decimal(10,2) |
+| `due_date` | Yes | Date |
+| `issue_date` | Yes | Date |
+| `currency` | No | Default: `USD` |
+| `paid_amount` | No | Default: 0.00 |
+| `status` | No | Default: `not_assigned` |
+| `source` | No | Enum: `api`, `sheets`, `in_app` |
+| `payment_terms` | No | Int, default: 30 (days) |
+| `description`, `line_items`, `notes` | No | Encrypted |
+| `custom_fields` | No | JSONB |
+| `is_written_off` | No | Boolean, default: false |
 
-<Callout type="warning">
-  Placeholder for detailed validation rules and lifecycle diagrams:
-  - Field-level validation for customer and account payloads.
-  - State machine for account status changes (for example, from `not_assigned` to `in_progress`, `settled`,
-    `disputed`, or `uncollectible`).
-  - Any asynchronous processing, queuing, or eventual consistency behavior that integrators should be aware of.
-</Callout>
+## Invoice status lifecycle
+
+<MermaidDisplay
+  chart={`
+stateDiagram-v2
+    [*] --> NOT_ASSIGNED : Invoice created
+    NOT_ASSIGNED --> IN_PROGRESS : Enrolled in campaign
+    IN_PROGRESS --> PENDING_COLLECTION : Campaign completes (no next campaign)
+    IN_PROGRESS --> DISPUTED : Dispute raised
+    IN_PROGRESS --> SETTLED : Full payment received
+    IN_PROGRESS --> UNCOLLECTIBLE : Manual write-off
+    IN_PROGRESS --> SUSPENDED : Manually suspended
+    PENDING_COLLECTION --> IN_PROGRESS : Enrolled in new campaign
+    PENDING_COLLECTION --> UNCOLLECTIBLE : Written off
+    DISPUTED --> IN_PROGRESS : All disputes resolved (has campaign)
+    DISPUTED --> NOT_ASSIGNED : All disputes resolved (no campaign)
+    DISPUTED --> UNCOLLECTIBLE : Written off
+    DISPUTED --> SUSPENDED : Manually suspended
+    SUSPENDED --> IN_PROGRESS : Manually unsuspended
+    SETTLED --> [*] : Locked
+    UNCOLLECTIBLE --> [*] : Locked
+`}
+/>
 
 ## Multi-tenant and workspace model
 
-Agile Receivables is multi-tenant:
+<MermaidDisplay
+  chart={`
+flowchart TD
+    Org["Organization (Company with is_org=true)"]
+    Co1["Company / Workspace 1"]
+    Co2["Company / Workspace 2"]
+    Key1["API Key A (scoped to Company 1)"]
+    Key2["API Key B (scoped to Company 2)"]
+    User["User"]
+    Mem1["Membership (role: owner)"]
+    Mem2["Membership (role: member)"]
 
-- Each company has its own isolated tenant.
-- Within a tenant, **workspaces** can be used to separate business units, brands, or regions.
-- API keys can be scoped to a single workspace or to an organization-level view that spans multiple workspaces.
+    Org --> Co1
+    Org --> Co2
+    Co1 --> Key1
+    Co2 --> Key2
+    User --> Mem1 --> Co1
+    User --> Mem2 --> Co2
+`}
+/>
 
-<Callout type="info">
-  Placeholder for a diagram showing tenants, organizations, workspaces, and how API keys map to each.
-  Include any constraints (for example, whether a single API key can switch workspaces via query parameters).
-</Callout>
+- `Company` = workspace.
+- API keys are permanently bound to one company/workspace.
+- Users can be members of multiple companies with different roles.
+- All data queries are implicitly filtered by `company_id`.
+- Scopes are per-key, not per-tenant.
 

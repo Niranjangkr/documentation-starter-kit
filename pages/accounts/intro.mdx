@@ -31,6 +31,14 @@ When working with accounts and related resources:
 - Every request must include an API key in the `X-Api-Key` header.
 - The key’s scopes determine which endpoints and operations are allowed (for example, `accounts:read`, `accounts:write`).
 - For organization-scoped keys, optional workspace filters (such as workspace IDs) may further restrict which accounts are visible or writeable.
+- API keys are permanently bound to one workspace/company context and cannot switch workspaces dynamically.
+- Data access is implicitly filtered by `company_id`.
+
+## Workspace model
+
+- `Company` is the workspace unit used for API data scoping.
+- Users can belong to multiple workspaces with different membership roles.
+- Scopes are configured per API key, not per tenant.
 
 <Callout type="info">
   The detailed authentication, scopes, and workspace mapping behavior are documented in

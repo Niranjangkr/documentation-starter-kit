@@ -1,5 +1,3 @@
-import { Callout } from 'nextra-theme-docs'
-
 # Disputes API
 
 Disputes are created by customers during collection campaigns. The Disputes API lets you
@@ -14,6 +12,8 @@ list disputes, inspect details, reply as the company, and resolve them.
 | POST   | `/disputes/{dispute_id}/reply`          | `disputes:write` | Reply to a dispute as the company.                        |
 | PUT    | `/disputes/{dispute_id}/resolve`        | `disputes:write` | Resolve a dispute; syncs account status as appropriate.   |
 
+Scope behavior and empty-scope full-access rules are documented in **Core Concepts → Authentication**.
+
 ## List disputes
 
 Supported query parameters:
@@ -22,10 +22,10 @@ Supported query parameters:
 | ------------ | -------- | ------------------------------------------------------- |
 | `status`     | string   | Filter by `open`, `replied`, or `resolved`.            |
 | `customer_id`| UUID     | Filter by customer.                                     |
-| `page`       | integer  | Page number (default: 1).                              |
-| `per_page`   | integer  | Results per page (default: 20, max: 100).              |
+| `page`       | integer  | Page number (default: 1, min: 1).                      |
+| `per_page`   | integer  | Results per page (default: 20, min: 1, max: 100).      |
 
-Pagination behavior and the `meta` object are documented in **Core Concepts → Pagination**.
+Pagination behavior and the `meta` object (including `total_pages`) are documented in **Core Concepts → Pagination**.
 
 ## Reply to a dispute
 
@@ -58,9 +58,31 @@ Pagination behavior and the `meta` object are documented in **Core Concepts → 
 }
 ```
 
-<Callout type="warning">
-  Backend detail needed:
-  - Describe how resolving a dispute affects the underlying account status and any campaign enrollment.
-  - Clarify whether dispute resolution can be reversed and how audit trails are exposed.
-</Callout>
+Resolving a dispute syncs invoice status using backend workflow:
+
+1. Count remaining non-resolved grievances on the invoice.
+2. If any are still open, invoice remains `DISPUTED`.
+3. If all are resolved:
+   - invoice with `campaign_id` -> `IN_PROGRESS`
+   - invoice without `campaign_id` -> `NOT_ASSIGNED`
+4. Backend then resumes or completes campaign execution for the invoice automatically.
+
+## Reopening behavior
+
+Resolved disputes can be implicitly reopened. If a customer replies to a resolved dispute,
+status moves back to `open` and invoice status is synced back to `DISPUTED`.
+There is no dedicated reopen endpoint.
+
+## Audit trail
+
+Dispute actions are captured in immutable audit logs (internal API: `GET /api/v1/audit-logs`)
+with actor, entity, timestamp, old/new values, and request metadata.
+
+## Fields affected by resolution
+
+Dispute resolution only updates `Invoice.status`.
+
+- Not affected: `enrollment_status`
+- Not affected: `paid_amount`, `paid_at`
+- Not affected: payment records
 

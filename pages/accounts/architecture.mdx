@@ -1,0 +1,73 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Architecture
+
+This page describes how Agile Receivables models customers, accounts, campaigns, payments, and disputes,
+and how external systems integrate with the API.
+
+## High-level system view
+
+At a high level:
+
+- Your **ERP / billing system** owns the source-of-truth invoices and customer master data.
+- The **Agile Receivables API** accepts data for customers, accounts, campaigns, and payments.
+- The **campaign engine** triggers communications and workflows based on account status.
+- **Collectors and customers** interact with the system through portals and messaging channels.
+
+<Callout type="info">
+  This section is a placeholder for a high-level architecture diagram (for example, data flow between ERP,
+  Agile Receivables, messaging providers, and payment processors). Insert the finalized diagram here.
+</Callout>
+
+## Data model relationships
+
+Core entities relevant to the external API:
+
+- **Customer** – person or business you invoice.
+- **Account (invoice)** – a receivable linked to a customer, with amount, currency, issue date, and due date.
+- **Campaign** – a defined series of steps that drive collections activity for a group of accounts.
+- **Payment** – money applied to an account, reducing the outstanding balance.
+- **Dispute** – a customer-raised issue related to an account, with a message thread and resolution lifecycle.
+
+Typical relationships:
+
+- A customer can have many accounts.
+- An account can belong to at most one active campaign at a time.
+- An account can have many payments and at most one active dispute.
+
+<Callout type="info">
+  Insert a finalized entity-relationship or UML-style diagram here to make these relationships explicit,
+  including any additional internal entities (for example, tasks, messages, or events).
+</Callout>
+
+## Validation and lifecycle flows
+
+From an integration perspective, most flows follow this pattern:
+
+1. Your system creates or updates customers.
+2. Your system creates or updates accounts (invoices) for those customers.
+3. Agile Receivables assigns accounts to campaigns and drives communications.
+4. Customers make payments, which are recorded against accounts.
+5. Status changes and disputes are synchronized back to your systems as needed.
+
+<Callout type="warning">
+  Placeholder for detailed validation rules and lifecycle diagrams:
+  - Field-level validation for customer and account payloads.
+  - State machine for account status changes (for example, from `not_assigned` to `in_progress`, `settled`,
+    `disputed`, or `uncollectible`).
+  - Any asynchronous processing, queuing, or eventual consistency behavior that integrators should be aware of.
+</Callout>
+
+## Multi-tenant and workspace model
+
+Agile Receivables is multi-tenant:
+
+- Each company has its own isolated tenant.
+- Within a tenant, **workspaces** can be used to separate business units, brands, or regions.
+- API keys can be scoped to a single workspace or to an organization-level view that spans multiple workspaces.
+
+<Callout type="info">
+  Placeholder for a diagram showing tenants, organizations, workspaces, and how API keys map to each.
+  Include any constraints (for example, whether a single API key can switch workspaces via query parameters).
+</Callout>
+

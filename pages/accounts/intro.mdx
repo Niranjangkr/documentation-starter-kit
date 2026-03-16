@@ -1,0 +1,46 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Accounts & API Keys Overview
+
+Agile Receivables exposes a REST API for syncing **customers**, **accounts (invoices)**, **campaigns**, **payments**, and **disputes** from your own systems into the platform.
+
+This section focuses on how accounts fit into the overall system, and how API keys and workspaces control access.
+
+## How accounts fit into Agile Receivables
+
+- **Customers** represent people or businesses you bill.
+- **Accounts** represent invoices or receivables associated with a customer.
+- **Campaigns** orchestrate outreach and collection flows for overdue accounts.
+- **Payments** record money applied against an account.
+- **Disputes** capture customer challenges or questions raised during collections.
+
+Accounts are always scoped to your company and workspace. The same external system can sync multiple workspaces by using different API keys.
+
+## Workspaces, organizations, and API keys
+
+In the Agile Receivables app, admins manage API keys from the **Integrations / API Keys** area. Keys can be:
+
+- **Live keys** – used against production data.
+- **Test keys** – used against sandbox data.
+- Scoped at either:
+  - a **single workspace**, or
+  - an **organization** with access to multiple workspaces.
+
+When working with accounts and related resources:
+
+- Every request must include an API key in the `X-Api-Key` header.
+- The key’s scopes determine which endpoints and operations are allowed (for example, `accounts:read`, `accounts:write`).
+- For organization-scoped keys, optional workspace filters (such as workspace IDs) may further restrict which accounts are visible or writeable.
+
+<Callout type="info">
+  The detailed authentication, scopes, and workspace mapping behavior are documented in
+  the **Core Concepts** page and in the in-app API Keys settings. This overview is intended
+  to help you reason about how accounts, workspaces, and keys fit together.
+</Callout>
+
+## Where to go next
+
+- **Architecture** – high-level system design, data model, and validation flows.
+- **Core Concepts** – authentication, response envelopes, errors, pagination, and rate limits.
+- **API Reference** – endpoint-level details for customers, accounts, campaigns, payments, and disputes.
+

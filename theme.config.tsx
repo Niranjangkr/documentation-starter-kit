@@ -2,16 +2,16 @@ import React from 'react'
 import { DocsThemeConfig } from 'nextra-theme-docs'
 
 const config: DocsThemeConfig = {
-  logo: <span>My Project</span>,
-  project: {
-    link: 'https://github.com/shuding/nextra-docs-template',
-  },
-  chat: {
-    link: 'https://discord.com',
-  },
-  docsRepositoryBase: 'https://github.com/shuding/nextra-docs-template',
+  logo: (
+    <img
+      src="/logo.svg"
+      alt="Agile Receivables"
+      style={{ height: 50, width: 'auto' }}
+      className="dark:invert"
+    />
+  ),
   footer: {
-    text: 'Nextra Docs Template',
+    text: 'Agile Receivables API Docs',
   },
 }
 

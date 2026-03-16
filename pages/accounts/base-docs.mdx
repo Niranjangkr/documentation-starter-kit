@@ -1,0 +1,145 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Core Concepts
+
+This page documents the shared concepts used across all Agile Receivables API endpoints:
+authentication, response envelopes, errors, pagination, and rate limits.
+
+## Authentication
+
+All requests to the Agile Receivables external API must include an API key in the `X-Api-Key` header:
+
+```bash
+curl --request GET \
+  --url https://api.agilereceivables.com/api/v1/external/customers \
+  --header 'X-Api-Key: sk_live_xxxxxxxxxxxxxxxxxxxx'
+```
+
+- Keys are managed from the **Integrations / API Keys** section of the dashboard.
+- Keys can be live or test, and are scoped to permissions such as:
+  - `customers:read`, `customers:write`
+  - `accounts:read`, `accounts:write`
+  - `campaigns:read`
+  - `disputes:read`, `disputes:write`
+
+<Callout type="warning">
+  Backend detail needed:
+  - Confirm the full set of available scopes and any default scopes for new keys.
+  - Clarify whether additional headers (such as tenant identifiers) are required for some environments.
+</Callout>
+
+## Response envelope
+
+All endpoints return a consistent JSON envelope:
+
+```json
+{
+  "success": true,
+  "status_code": 200,
+  "message": "...",
+  "data": { },
+  "meta": { }
+}
+```
+
+- `success`: boolean flag indicating whether the operation completed successfully.
+- `status_code`: HTTP-style numeric code mirrored in the HTTP status.
+- `message`: human-readable description of the outcome.
+- `data`: payload for the current resource (for example, a customer or account object, or a list).
+- `meta`: metadata, including pagination information for list endpoints.
+
+## Errors
+
+Error responses reuse the same envelope shape:
+
+```json
+{
+  "success": false,
+  "status_code": 401,
+  "message": "Invalid API key",
+  "errors": []
+}
+```
+
+Common HTTP status codes:
+
+| Status | Name          | Description                                           |
+| ------ | ------------- | ----------------------------------------------------- |
+| 400    | Bad Request   | Validation error in the request body or parameters.  |
+| 401    | Unauthorized  | Missing, invalid, or revoked API key.               |
+| 403    | Forbidden     | API key does not have the required scope.           |
+| 404    | Not Found     | Resource does not exist for your tenant.            |
+| 422    | Unprocessable | JSON is valid but fields fail validation.           |
+| 429    | Too Many      | Rate limit exceeded for this API key.               |
+| 500    | Server Error  | Unexpected internal server error.                   |
+
+<Callout type="warning">
+  Backend detail needed:
+  - Confirm the exact error payloads for 401 and 403, including any machine-readable error codes.
+  - Confirm whether additional error fields (for example, `error_code`, `details`) are present in the `errors` array.
+</Callout>
+
+## Pagination
+
+Paginated endpoints (such as list customers, list accounts, and list disputes) use a standard `meta` object:
+
+```json
+{
+  "meta": {
+    "total": 150,
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
+
+- `total`: total number of records matching the current filters.
+- `page`: 1-based page index.
+- `per_page`: number of records returned per page.
+
+Typical query parameters for list endpoints:
+
+- `page`: page number (default: 1).
+- `per_page`: results per page (default: 20, max: 100).
+
+Some endpoints define additional filters, for example:
+
+- Accounts: `search`, `status`, `customer_id`, `overdue_only`, `amount_min`, `amount_max`.
+- Disputes: `status`, `customer_id`.
+
+<Callout type="warning">
+  Backend detail needed:
+  - Confirm whether pagination is strictly page/limit based, or if cursor-based pagination is available.
+  - Confirm the full set of supported query parameters for each list endpoint and any default values.
+  - Confirm whether `total` is always present or can be omitted for performance reasons.
+</Callout>
+
+## Rate limiting
+
+Requests are rate-limited per API key. When a client exceeds the allowed rate, the API returns
+`429 Too Many Requests` with an error envelope.
+
+<Callout type="warning">
+  Backend detail needed:
+  - Document exact rate limits for test vs. live keys.
+  - Confirm which HTTP headers are returned (for example, `X-RateLimit-Remaining`,
+    `X-RateLimit-Reset`, or similar).
+  - Clarify how rate limits are applied across tenants, workspaces, and endpoints.
+</Callout>
+
+## Typical integration flow
+
+The following high-level flow is common when integrating with Agile Receivables:
+
+1. **Create or sync customers**  
+   Use the **Customers** endpoints to create or update customer records. Ensure that each customer has at least one contact point (`email` or `phone`) and enough identifying information for your agents.
+
+2. **Create or sync accounts**  
+   Use the **Accounts** endpoints to create invoices with amounts, currency, issue dates, and due dates. Optional fields (such as `external_invoice_id`, `payment_terms`, or `description`) can help with reporting.
+
+3. **Assign accounts to campaigns**  
+   Use the **Campaigns** endpoints to place accounts into one or more collection campaigns, individually or in bulk.
+
+4. **Record payments and reconcile**  
+   Use the **Payments** endpoints to record payments and track outstanding balances, then use your own systems to reconcile these with bank or processor statements.
+

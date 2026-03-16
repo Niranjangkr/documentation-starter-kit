@@ -1,0 +1,335 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.github/screenshot.png
+.gitignore
+components/counters.module.css
+components/counters.tsx
+LICENSE
+next-env.d.ts
+next.config.js
+package.json
+pages/_meta.json
+pages/about.mdx
+pages/advanced.mdx
+pages/advanced/satori.mdx
+pages/another.mdx
+pages/index.mdx
+README.md
+theme.config.tsx
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".gitignore">
+.next
+node_modules
+</file>
+
+<file path="components/counters.module.css">
+.counter {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 2px 6px;
+  margin: 12px 0 0;
+}
+</file>
+
+<file path="components/counters.tsx">
+// Example from https://beta.reactjs.org/learn
+
+import { useState } from 'react'
+import styles from './counters.module.css'
+
+function MyButton() {
+  const [count, setCount] = useState(0)
+
+  function handleClick() {
+    setCount(count + 1)
+  }
+
+  return (
+    <div>
+      <button onClick={handleClick} className={styles.counter}>
+        Clicked {count} times
+      </button>
+    </div>
+  )
+}
+
+export default function MyApp() {
+  return <MyButton />
+}
+</file>
+
+<file path="LICENSE">
+MIT License
+
+Copyright (c) 2022 Shu Ding
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</file>
+
+<file path="next-env.d.ts">
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/basic-features/typescript for more information.
+</file>
+
+<file path="next.config.js">
+const withNextra = require('nextra')({
+  theme: 'nextra-theme-docs',
+  themeConfig: './theme.config.tsx',
+})
+
+module.exports = withNextra()
+</file>
+
+<file path="package.json">
+{
+  "name": "nextra-docs-template",
+  "version": "0.0.1",
+  "description": "Nextra docs template",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shuding/nextra-docs-template.git"
+  },
+  "author": "Shu Ding <g@shud.in>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shuding/nextra-docs-template/issues"
+  },
+  "homepage": "https://github.com/shuding/nextra-docs-template#readme",
+  "dependencies": {
+    "next": "^13.0.6",
+    "nextra": "latest",
+    "nextra-theme-docs": "latest",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "18.11.10",
+    "typescript": "^4.9.3"
+  }
+}
+</file>
+
+<file path="pages/_meta.json">
+{
+  "index": "Introduction",
+  "another": "Another Page",
+  "advanced": "Advanced (A Folder)",
+  "about": {
+    "title": "About",
+    "type": "page"
+  },
+  "contact": {
+    "title": "Contact ↗",
+    "type": "page",
+    "href": "https://twitter.com/shuding_",
+    "newWindow": true
+  }
+}
+</file>
+
+<file path="pages/about.mdx">
+# About
+
+This is the about page! This page is shown on the navbar.
+</file>
+
+<file path="pages/advanced.mdx">
+# Advanced
+
+This is the index page for the Advanced folder!
+</file>
+
+<file path="pages/advanced/satori.mdx">
+# Satori
+
+Satori (悟り) is a Japanese Buddhist term for awakening, "comprehension; understanding".
+</file>
+
+<file path="pages/another.mdx">
+# Another Page
+
+```js filename="demo.js" {3} copy
+let a = 1;
+
+console.log(a);
+```
+
+## Component
+
+import { useState } from 'react'
+
+{/* Import CSS modules */}
+import styles from '../components/counters.module.css'
+
+export const Counter = () => {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <button onClick={() => setCount(count + 1)} className={styles.counter}>Clicked {count} times</button>
+    </div>
+  );
+};
+
+<Counter/>
+
+## External Component
+
+import Counters from '../components/counters'
+
+<Counters />
+</file>
+
+<file path="pages/index.mdx">
+# Introduction
+ 
+Welcome to Nextra! This is a basic docs template. You can use it as a starting point for your own project :)
+
+## What is Nextra?
+
+A **simple**, **powerful** and **flexible** site generation framework with everything you love from Next.js.
+
+## Documentation
+
+The documentation is available at [https://nextra.site](https://nextra.site).
+</file>
+
+<file path="README.md">
+# Nextra Docs Template 
+
+This is a template for creating documentation with [Nextra](https://nextra.site).
+
+[**Live Demo →**](https://nextra-docs-template.vercel.app)
+
+[![](.github/screenshot.png)](https://nextra-docs-template.vercel.app)
+
+## Quick Start
+
+Click the button to clone this repository and deploy it on Vercel:
+
+[![](https://vercel.com/button)](https://vercel.com/new/clone?s=https%3A%2F%2Fgithub.com%2Fshuding%2Fnextra-docs-template&showOptionalTeamCreation=false)
+
+## Local Development
+
+First, run `pnpm i` to install the dependencies.
+
+Then, run `pnpm dev` to start the development server and visit localhost:3000.
+
+## License
+
+This project is licensed under the MIT License.
+</file>
+
+<file path="theme.config.tsx">
+import React from 'react'
+import { DocsThemeConfig } from 'nextra-theme-docs'
+
+const config: DocsThemeConfig = {
+  logo: <span>My Project</span>,
+  project: {
+    link: 'https://github.com/shuding/nextra-docs-template',
+  },
+  chat: {
+    link: 'https://discord.com',
+  },
+  docsRepositoryBase: 'https://github.com/shuding/nextra-docs-template',
+  footer: {
+    text: 'Nextra Docs Template',
+  },
+}
+
+export default config
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve"
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
+</file>
+
+</files>

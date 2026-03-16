@@ -1,0 +1,67 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Campaigns API
+
+Campaigns define automated collection flows that operate on groups of accounts.
+Use the Campaigns API to discover available campaigns and assign accounts into them.
+
+## Endpoints
+
+| Method | Path                                  | Scope             | Description                                           |
+| ------ | ------------------------------------- | ----------------- | ----------------------------------------------------- |
+| GET    | `/campaigns`                          | `campaigns:read`  | List all campaigns for your company.                  |
+| GET    | `/campaigns/{campaign_id}`            | `campaigns:read`  | Get details for a single campaign.                    |
+| POST   | `/accounts/{account_id}/campaign`     | `accounts:write`  | Assign a single account to a campaign.                |
+| POST   | `/accounts/campaign/bulk`             | `accounts:write`  | Bulk assign up to 100 accounts to a campaign.         |
+
+## Fields
+
+| Field          | Type    | Description                                              |
+| -------------- | ------- | -------------------------------------------------------- |
+| `campaign_id`  | uuid    | Target campaign identifier.                              |
+| `status`       | string  | Filter campaigns by `active`, `draft`, `paused`, `archived`. |
+| `campaign_type`| string  | Filter campaigns by category or type.                    |
+| `account_ids`  | uuid[]  | Array of account IDs to enroll in a campaign.           |
+
+## Bulk assign accounts to a campaign
+
+### cURL
+
+```bash
+curl --request POST \
+  --url 'https://api.agilereceivables.com/api/v1/external/accounts/campaign/bulk' \
+  --header 'X-Api-Key: sk_live_xxxxxxxxxxxxxxxxxxxx' \
+  --header 'Content-Type: application/json' \
+  --data '{
+  "campaign_id": "uuid",
+  "account_ids": ["uuid1", "uuid2", "uuid3"]
+}'
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "status_code": 200,
+  "message": "Campaign assignment processed",
+  "data": {
+    "campaign_id": "uuid",
+    "total_enrollments": 3,
+    "successful_enrollments": 2,
+    "failed_enrollments": 1,
+    "results": [
+      { "invoice_id": "uuid1", "invoice_number": "INV-001", "status": "success" },
+      { "invoice_id": "uuid2", "invoice_number": "INV-002", "status": "success" },
+      { "invoice_id": "uuid3", "invoice_number": "INV-003", "status": "failed", "error": "..." }
+    ]
+  }
+}
+```
+
+<Callout type="warning">
+  Backend detail needed:
+  - Clarify how conflicts are handled when an account is already enrolled in a different campaign.
+  - Document any limits on simultaneous campaign enrollment per account.
+</Callout>
+

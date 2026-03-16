@@ -1,0 +1,94 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Customers API
+
+Use the Customers API to create, update, list, and bulk import customer records.
+
+Customers represent the people or businesses you invoice. Each customer can be linked to multiple
+accounts (invoices) and can have tags, custom fields, and communication preferences.
+
+## Endpoints
+
+| Method | Path                      | Scope            | Description                                           |
+| ------ | ------------------------- | ---------------- | ----------------------------------------------------- |
+| POST   | `/customers`              | `customers:write`| Create a single customer.                             |
+| GET    | `/customers`              | `customers:read` | List customers with search and pagination.            |
+| GET    | `/customers/{customer_id}`| `customers:read` | Fetch a customer by UUID.                             |
+| PUT    | `/customers/{customer_id}`| `customers:write`| Update customer fields.                               |
+| DELETE | `/customers/{customer_id}`| `customers:write`| Soft-delete a customer.                               |
+| POST   | `/customers/bulk`         | `customers:write`| Bulk create or update customers by `external_id`.     |
+
+<Callout type="info">
+  Bulk operations use your own stable identifier (`external_id`) to decide whether to create a new
+  customer or update an existing one. Use a consistent external identifier from your CRM or ERP.
+</Callout>
+
+## Request fields
+
+| Field                     | Type      | Description                                                                                      |
+| ------------------------- | --------- | ------------------------------------------------------------------------------------------------ |
+| `email`                   | string    | Email address. Required if `phone` is not sent.                                                 |
+| `phone`                   | string    | E.164-format phone number. Required if `email` is not sent.                                     |
+| `firstName`               | string    | Customer first name.                                                                            |
+| `lastName`                | string    | Customer last name.                                                                             |
+| `companyName`             | string    | Company name for business customers.                                                            |
+| `external_id`             | string    | External identifier from your system, used as the primary match key for bulk operations.        |
+| `tags`                    | string[]  | Optional tags (for example: `["vip"]`).                                                         |
+| `custom_fields`           | object    | Custom metadata object, such as `{"account_type": "premium"}`.                                  |
+| `communication_preferences`| object   | Preferred channels such as `{"sms": true, "email": true, "voice": false}`.                      |
+
+## Create customer
+
+### cURL
+
+```bash
+curl --request POST \
+  --url https://api.agilereceivables.com/api/v1/external/customers \
+  --header 'X-Api-Key: sk_live_xxxxxxxxxxxxxxxxxxxx' \
+  --header 'Content-Type: application/json' \
+  --data '{
+  "email": "jane@example.com",
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "phone": "+15550001234",
+  "companyName": "Acme Corp",
+  "external_id": "cust-001",
+  "tags": ["vip"],
+  "custom_fields": { "account_type": "premium" },
+  "communication_preferences": { "sms": true, "email": true, "voice": false }
+}'
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "status_code": 200,
+  "message": "Customer created successfully",
+  "data": {
+    "id": "uuid",
+    "email": "jane@example.com",
+    "phone": "+15550001234",
+    "first_name": "Jane",
+    "last_name": "Doe",
+    "company_name": "Acme Corp",
+    "external_id": "cust-001",
+    "tags": ["vip"],
+    "custom_fields": { "account_type": "premium" }
+  }
+}
+```
+
+## List customers
+
+List customers with pagination and search:
+
+```bash
+curl --request GET \
+  --url 'https://api.agilereceivables.com/api/v1/external/customers?page=1&per_page=20' \
+  --header 'X-Api-Key: sk_live_xxxxxxxxxxxxxxxxxxxx'
+```
+
+Pagination behavior and the `meta` object are documented in **Core Concepts → Pagination**.
+

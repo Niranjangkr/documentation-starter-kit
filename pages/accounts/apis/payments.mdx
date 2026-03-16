@@ -1,0 +1,62 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Payments API
+
+Use the Payments API to record inbound payments and monitor balances for individual accounts.
+
+Payments are always tied to a specific account and can affect the account’s collection status.
+
+## Endpoints
+
+| Method | Path                                      | Scope            | Description                                               |
+| ------ | ----------------------------------------- | ---------------- | --------------------------------------------------------- |
+| POST   | `/accounts/{account_id}/payment`          | `accounts:write` | Record a payment against an account.                      |
+| GET    | `/accounts/{account_id}/payment-status`   | `accounts:read`  | Get payments and current outstanding balance.             |
+| GET    | `/accounts/{account_id}/status`           | `accounts:read`  | Check collection status with overdue state.               |
+
+## Payment fields
+
+| Field              | Type    | Description                                                  |
+| ------------------ | ------- | ------------------------------------------------------------ |
+| `amount`           | number  | Payment amount. Must not exceed the outstanding balance.     |
+| `payment_method`   | string  | Method such as `check`, `ach`, or `card`.                    |
+| `payment_reference`| string  | External reference from your system (for example, check ID). |
+| `notes`            | string  | Optional notes stored on the account activity timeline.      |
+
+## Record a payment
+
+### cURL
+
+```bash
+curl --request POST \
+  --url https://api.agilereceivables.com/api/v1/external/accounts/uuid/payment \
+  --header 'X-Api-Key: sk_live_xxxxxxxxxxxxxxxxxxxx' \
+  --header 'Content-Type: application/json' \
+  --data '{
+  "amount": 500,
+  "payment_method": "check",
+  "payment_reference": "CHK-2026-001"
+}'
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "status_code": 200,
+  "message": "Payment recorded",
+  "data": {
+    "invoice_id": "uuid",
+    "new_status": "in_progress",
+    "outstanding_amount": 1000.0
+  }
+}
+```
+
+<Callout type="warning">
+  Backend detail needed:
+  - Clarify how partial payments, refunds, and chargebacks are represented.
+  - Document how status transitions are triggered by payments (for example, when an account becomes `settled`).
+</Callout>
+

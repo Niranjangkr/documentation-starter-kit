@@ -1,0 +1,119 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Accounts API
+
+Use the Accounts API to create and manage invoice-level receivables, track balances, and control
+which campaign each account is enrolled in.
+
+## Endpoints
+
+| Method | Path                                      | Scope            | Description                                                         |
+| ------ | ----------------------------------------- | ---------------- | ------------------------------------------------------------------- |
+| POST   | `/accounts`                               | `accounts:write` | Create a single account.                                            |
+| GET    | `/accounts`                               | `accounts:read`  | List accounts with filters and pagination.                          |
+| GET    | `/accounts/{account_id}`                  | `accounts:read`  | Get a single account by internal UUID.                              |
+| PUT    | `/accounts/{account_id}`                  | `accounts:write` | Update account fields.                                              |
+| DELETE | `/accounts/{account_id}`                  | `accounts:write` | Soft-delete an account.                                             |
+| GET    | `/accounts/{account_id}/status`           | `accounts:read`  | Get collection status and campaign assignment.                      |
+| PUT    | `/accounts/{account_id}/status`           | `accounts:write` | Update status or write-off state.                                   |
+| POST   | `/accounts/{account_id}/payment`          | `accounts:write` | Record a payment against an account.                                |
+| GET    | `/accounts/{account_id}/payment-status`   | `accounts:read`  | Get payment history and current balance.                            |
+| POST   | `/accounts/{account_id}/campaign`         | `accounts:write` | Assign a single account to a campaign.                              |
+| POST   | `/accounts/campaign/bulk`                 | `accounts:write` | Bulk assign up to 100 accounts to a campaign.                       |
+| POST   | `/accounts/bulk`                          | `accounts:write` | Bulk create or update by `external_invoice_id` (max 500 records).   |
+
+## Request fields
+
+| Field                | Type     | Description                                                                           |
+| -------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `invoice_number`     | string   | Invoice number from your billing system (required).                                  |
+| `amount`             | number   | Total invoice amount in major units (required).                                      |
+| `currency`           | string   | ISO currency code (defaults to `USD`).                                               |
+| `issue_date`         | date     | Issue date in `YYYY-MM-DD` format (required).                                        |
+| `due_date`           | date     | Due date in `YYYY-MM-DD` format (required).                                          |
+| `paid_amount`        | number   | Optional pre-paid amount when importing existing balances.                           |
+| `payment_terms`      | integer  | Optional numeric terms value (for example, `30` for 30 days).                        |
+| `description`        | string   | Optional invoice description.                                                        |
+| `external_invoice_id`| string   | External invoice identifier used to match records for bulk operations.               |
+
+## Create account
+
+### cURL
+
+```bash
+curl --request POST \
+  --url https://api.agilereceivables.com/api/v1/external/accounts \
+  --header 'X-Api-Key: sk_live_xxxxxxxxxxxxxxxxxxxx' \
+  --header 'Content-Type: application/json' \
+  --data '{
+  "customer_id": "uuid",
+  "invoice_number": "INV-2026-001",
+  "amount": 1500,
+  "currency": "USD",
+  "issue_date": "2026-03-01",
+  "due_date": "2026-04-01"
+}'
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "status_code": 200,
+  "message": "Account created successfully",
+  "data": {
+    "id": "uuid",
+    "customer_id": "uuid",
+    "external_invoice_id": "your-inv-id",
+    "invoice_number": "INV-2026-001",
+    "amount": 1500.0,
+    "paid_amount": 100.0,
+    "status": "not_assigned",
+    "currency": "USD",
+    "issue_date": "2026-03-01",
+    "due_date": "2026-04-01",
+    "campaign_id": null,
+    "created_at": "2026-03-01T00:00:00Z",
+    "updated_at": "2026-03-14T00:00:00Z"
+  }
+}
+```
+
+## List accounts
+
+Use filters and pagination to retrieve accounts:
+
+```bash
+curl --request GET \
+  --url 'https://api.agilereceivables.com/api/v1/external/accounts?page=1&per_page=20' \
+  --header 'X-Api-Key: sk_live_xxxxxxxxxxxxxxxxxxxx'
+```
+
+Supported query parameters include:
+
+| Param         | Type     | Description                                             |
+| -------------| -------- | ------------------------------------------------------- |
+| `search`     | string   | Search by invoice number or customer name.             |
+| `status`     | string   | Filter by account status (see status values below).    |
+| `customer_id`| UUID     | Filter by customer UUID.                               |
+| `overdue_only`| boolean | If `true`, return only overdue accounts.               |
+| `amount_min` | number   | Minimum amount filter.                                 |
+| `amount_max` | number   | Maximum amount filter.                                 |
+| `page`       | integer  | Page number (default: 1).                              |
+| `per_page`   | integer  | Results per page (default: 20, max: 100).              |
+
+Pagination behavior and the `meta` object are documented in **Core Concepts → Pagination**.
+
+### Account status values
+
+| Status               | Description                                      |
+| -------------------- | ------------------------------------------------ |
+| `not_assigned`       | Created but not in any campaign.                 |
+| `in_progress`        | Active in a collection campaign.                 |
+| `settled`            | Paid in full.                                    |
+| `disputed`           | Customer raised a dispute.                       |
+| `uncollectible`      | Written off.                                     |
+| `suspended`          | Manually paused.                                 |
+| `pending_collection` | Campaign finished, awaiting next step.           |
+

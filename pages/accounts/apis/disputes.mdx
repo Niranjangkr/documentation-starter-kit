@@ -1,0 +1,66 @@
+import { Callout } from 'nextra-theme-docs'
+
+# Disputes API
+
+Disputes are created by customers during collection campaigns. The Disputes API lets you
+list disputes, inspect details, reply as the company, and resolve them.
+
+## Endpoints
+
+| Method | Path                                    | Scope            | Description                                               |
+| ------ | --------------------------------------- | ---------------- | --------------------------------------------------------- |
+| GET    | `/disputes`                             | `disputes:read`  | List all disputes with filters and pagination.            |
+| GET    | `/disputes/{dispute_id}`                | `disputes:read`  | Get dispute details, including the message thread.        |
+| POST   | `/disputes/{dispute_id}/reply`          | `disputes:write` | Reply to a dispute as the company.                        |
+| PUT    | `/disputes/{dispute_id}/resolve`        | `disputes:write` | Resolve a dispute; syncs account status as appropriate.   |
+
+## List disputes
+
+Supported query parameters:
+
+| Param        | Type     | Description                                             |
+| ------------ | -------- | ------------------------------------------------------- |
+| `status`     | string   | Filter by `open`, `replied`, or `resolved`.            |
+| `customer_id`| UUID     | Filter by customer.                                     |
+| `page`       | integer  | Page number (default: 1).                              |
+| `per_page`   | integer  | Results per page (default: 20, max: 100).              |
+
+Pagination behavior and the `meta` object are documented in **Core Concepts → Pagination**.
+
+## Reply to a dispute
+
+### Request
+
+```json
+{
+  "message": "Thank you for reaching out. We are reviewing your dispute."
+}
+```
+
+### Response
+
+```json
+{
+  "id": "uuid",
+  "grievance_id": "uuid",
+  "message": "Thank you for reaching out. We are reviewing your dispute.",
+  "sent_at": "2026-03-14T08:00:00Z"
+}
+```
+
+## Resolve a dispute
+
+```json
+{
+  "id": "uuid",
+  "status": "resolved",
+  "resolved_at": "2026-03-14T08:00:00Z"
+}
+```
+
+<Callout type="warning">
+  Backend detail needed:
+  - Describe how resolving a dispute affects the underlying account status and any campaign enrollment.
+  - Clarify whether dispute resolution can be reversed and how audit trails are exposed.
+</Callout>
+

@@ -7,9 +7,13 @@ const config: DocsThemeConfig = {
       src="/logo.svg"
       alt="Agile Receivables"
       style={{ height: 50, width: 'auto' }}
-      className="dark:invert"
     />
   ),
+  // Force light mode and hide the dark/light toggle
+  darkMode: false,
+  nextThemes: {
+    forcedTheme: 'light',
+  },
   footer: {
     text: 'Agile Receivables API Docs',
   },
